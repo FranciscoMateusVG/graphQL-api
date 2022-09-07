@@ -1,4 +1,4 @@
-const { students } = require('./database.js')
+const { prisma } = require('./database.js')
 
 const resolvers = {
   Student: {
@@ -11,36 +11,44 @@ const resolvers = {
 
   Query: {
     enrolled: (parent, args) => {
-      return students.filter((student) => student.enrolled)
+      return prisma.student.findMany({
+        where: { enrolled: true }
+      })
     },
     students: (parent, args) => {
-      return students
+      return prisma.student.findMany()
     },
     notEnrolled: (parent, args) => {
-      return students.filter((student) => !student.enrolled)
+      return prisma.student.findMany({
+        where: { enrolled: false }
+      })
     },
     student: (parent, args) => {
-      return students.find((student) => student.id === Number(args.id))
+      return prisma.student.findFirst({
+        where: { id: Number(args.id) }
+      })
     }
   },
 
   Mutation: {
     registerStudent: (parent, args) => {
-      students.push({
-        id: students.length + 1,
-        email: args.email,
-        fullName: args.fullName,
-        dept: args.dept,
-        enrolled: false
+      return prisma.student.create({
+        data: {
+          email: args.email,
+          dept: args.dept,
+          fullName: args.fullName
+        }
       })
-      return students[students.length - 1]
     },
     enroll: (parent, args) => {
-      const studentToEnroll = students.find(
-        (student) => student.id === Number(args.id)
-      )
-      studentToEnroll.enrolled = true
-      return studentToEnroll
+      return prisma.student.update({
+        where: {
+          id: Number(args.id)
+        },
+        data: {
+          enrolled: true
+        }
+      })
     }
   }
 }
